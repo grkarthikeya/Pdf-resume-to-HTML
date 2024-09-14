@@ -26,7 +26,7 @@ def extract_text_from_pdf(pdf_file):
 
 # Function to summarize text for a specific section using the Gemini API
 def summarize_section_with_gemini(extracted_text, section):
-    prompt = f"Summarize the following {section} section:\n\nText: {extracted_text}"
+    prompt = f"Precisely Summarize the following {section} section:\n\nText: {extracted_text}"
     
     # Instantiate the Gemini model
     model = genai.GenerativeModel("gemini-1.5-flash")
