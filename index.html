@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Resume Text Extraction Tool</title>
+  <style>
+    body {
+      font-family: 'Arial', sans-serif;
+      background-color: #f0f2f5;
+      margin: 0;
+      padding: 0;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      overflow: auto; /* Ensure the page can scroll */
+    }
+
+    .container {
+      background-color: #ffffff;
+      padding: 30px;
+      border-radius: 10px;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+      width: 100%;
+      max-width: 600px;
+      text-align: center;
+      margin: auto; /* Center the container */
+    }
+
+    h1 {
+      font-size: 28px;
+      color: #333;
+      margin-bottom: 20px;
+    }
+
+    label {
+      font-size: 16px;
+      font-weight: bold;
+      color: #555;
+      display: block;
+      margin: 15px 0 5px;
+      text-align: left;
+    }
+
+    textarea, input[type="file"] {
+      width: calc(100% - 20px);
+      padding: 12px;
+      margin-bottom: 20px;
+      border: 1px solid #ddd;
+      border-radius: 5px;
+      font-size: 14px;
+      background-color: #fafafa;
+    }
+
+    textarea:focus, input[type="file"]:focus {
+      border-color: #007bff;
+      outline: none;
+    }
+
+    #generate {
+      background-color: #007bff;
+      color: white;
+      padding: 12px 20px;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      font-size: 16px;
+      transition: background-color 0.3s;
+      margin-top: 10px;
+    }
+
+    #generate:hover {
+      background-color: #0056b3;
+    }
+
+    #loading {
+      display: none;
+      margin-top: 20px;
+      padding: 10px;
+      font-size: 16px;
+      color: #007bff;
+    }
+
+    #output {
+      margin-top: 20px;
+      padding: 15px;
+      background-color: #fff;
+      border-radius: 5px;
+      border: 1px solid #ddd;
+      min-height: 60px;
+      text-align: left;
+      font-size: 14px;
+      color: #333;
+      display: none;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Extract Text from Resume PDF</h1>
+
+    <label for="context">Optional Context:</label>
+    <textarea id="context" rows="4" placeholder="Enter any context..."></textarea>
+
+    <label for="pdf">Upload PDF:</label>
+    <input type="file" id="pdf" accept=".pdf">
+
+    <button id="generate">Extract Text</button>
+
+    <div id="loading">Processing...</div>
+    <div id="output"></div>
+  </div>
+
+  <script>
+    document.getElementById("generate").addEventListener("click", function() {
+      let context = document.getElementById("context").value;
+      let fileInput = document.getElementById("pdf");
+      let file = fileInput.files[0];
+      
+      if (!file) {
+        alert("Please upload a PDF.");
+        return;
+      }
+
+      let formData = new FormData();
+      formData.append("pdf", file);
+      if (context) {
+        formData.append("context", context);
+      }
+
+      document.getElementById("loading").style.display = 'block';
+
+      fetch('http://127.0.0.1:5000/api/extract-text', {
+        method: 'POST',
+        body: formData
+      })
+      .then(response => response.json())
+      .then(data => {
+        let outputDiv = document.getElementById("output");
+        let loadingDiv = document.getElementById("loading");
+        loadingDiv.style.display = 'none';
+        outputDiv.style.display = 'block';
+        outputDiv.innerHTML = '';
+        
+        if (data.error) {
+          outputDiv.innerHTML = `<p style="color: red;">Error: ${data.error}</p>`;
+        } else {
+          outputDiv.innerHTML = `
+            <p><strong>Contact Information:</strong></p><p>${data['Contact Information']}</p>
+            <p><strong>Education:</strong></p><p>${data['Education']}</p>
+            <p><strong>Professional Summary:</strong></p><p>${data['Professional Summary']}</p>
+            <p><strong>Key Skills:</strong></p><p>${data['Key Skills']}</p>
+            <p><strong>Work Experience:</strong></p><p>${data['Work Experience']}</p>
+          `;
+        }
+      })
+      .catch(error => {
+        console.error('Error:', error);
+        document.getElementById("loading").style.display = 'none';
+        document.getElementById("output").innerHTML = `<p style="color: red;">Error: ${error.message}</p>`;
+      });
+    });
+  </script>
+</body>
+</html>
